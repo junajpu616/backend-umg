@@ -7,11 +7,13 @@ async function list(req, res) {
 
 async function create(req, res) {
   try {
-    const { name, price, inStock = true } = req.body;
-    if (!name || price == null) return res.status(400).json({ error: "name y price requeridos" });
+    const { nombre, precio, stock, descripcion } = req.body;
+    if (!nombre || precio == null || stock == null || descripcion == null) {
+      return res.status(400).json({ error: "nombre, precio y stock son requeridos" });
+    }
 
     const producto = await prisma.producto.create({
-      data: { name, price, inStock }
+      data: { nombre, precio, stock, descripcion }
     });
     res.status(201).json(producto);
   } catch (e) {
@@ -30,13 +32,14 @@ async function getById(req, res) {
 async function update(req, res) {
   try {
     const id = Number(req.params.id);
-    const { name, price, inStock } = req.body;
+    const { nombre, precio, stock, descripcion } = req.body;
     const producto = await prisma.producto.update({
       where: { id },
       data: {
-        ...(name !== undefined && { name }),
-        ...(price !== undefined && { price }),
-        ...(inStock !== undefined && { inStock })
+        ...(nombre !== undefined && { nombre }),
+        ...(precio !== undefined && { precio }),
+        ...(stock !== undefined && { stock }),
+        ...(descripcion !== undefined && { descripcion })
       }
     });
     res.json(producto);
