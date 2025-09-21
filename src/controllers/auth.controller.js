@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { prisma } = require("../config/prisma");
+const { signTmpToken } = require("./twofa.controller");
 
 async function register(req, res) {
   try {
@@ -30,6 +31,12 @@ async function login(req, res) {
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: "Credenciales inválidas" });
+
+    // If 2FA is enabled, return a temporary token and require TOTP
+    if (user.twoFactorEnabled) {
+      const tmpToken = signTmpToken(user);
+      return res.json({ requires2FA: true, tmpToken });
+    }
 
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });

@@ -1,5 +1,65 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencias
+node_modules/
 
-/generated/prisma
+# Variables de entorno (mantener fuera del control de versiones)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Datos de runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Cobertura y reportes
+coverage/
+.nyc_output/
+
+# Artefactos de compilación/salida
+build/
+dist/
+.tmp/
+tmp/
+temp/
+.cache/
+.out/
+
+# Configuración de editores/IDEs
+.vscode/
+.idea/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Prisma: cliente generado y DBs locales
+/generated/prisma/
+prisma/dev.db
+prisma/*.db
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Cachés de herramientas
+.eslintcache
+*.tsbuildinfo
+
+# Otros
+*.orig
+*.rej
