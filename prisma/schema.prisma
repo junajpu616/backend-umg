@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -14,38 +11,103 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USUARIO // Para clientes regulares y mecánicos
+  PROVEEDOR
+  ADMIN
+}
+
+model User {
+  id                  Int        @id @default(autoincrement())
+  name                String
+  email               String     @unique
+  passwordHash        String
+  role                Role       @default(USUARIO)
+  active              Boolean    @default(true)
+  twoFactorEnabled    Boolean    @default(false)
+  twoFactorSecret     String?
+  twoFactorTempSecret String?
+  direccion           String?
+  telefono            String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  // Relaciones nuevas
+  proveedor           Proveedor?
+  pedidos             Pedido[]
+
+  @@map("user")
+}
+
+model Proveedor {
+  id              Int        @id @default(autoincrement())
+  userId          Int        @unique
+  user            User       @relation(fields: [userId], references: [id])
+  nombreComercial String
+  rfc             String?
+  direccion       String
+  latitud         Float
+  longitud        Float
+  telefono        String
+  productos       Producto[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("proveedor")
+}
+
 model Producto {
   id          Int          @id @default(autoincrement())
   nombre      String
   precio      Decimal      @db.Decimal(10, 2)
   descripcion String?
   stock       Int          @default(0)
+  proveedorId Int
+  proveedor   Proveedor    @relation(fields: [proveedorId], references: [id])
+  categoria   String
+  imagenUrl   String?
+  activo      Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   Movimientos Movimiento[]
+  pedidoItems PedidoItem[]
 
-  @@map("producto") // tabla en minúsculas
+  @@map("producto")
+}
+
+model Pedido {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  estado    String // PENDIENTE, CONFIRMADO, EN_PROCESO, ENTREGADO, CANCELADO
+  items     PedidoItem[]
+  total     Decimal      @db.Decimal(10, 2)
+  comision  Decimal      @db.Decimal(10, 2)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("pedido")
+}
+
+model PedidoItem {
+  id         Int      @id @default(autoincrement())
+  pedidoId   Int
+  pedido     Pedido   @relation(fields: [pedidoId], references: [id])
+  productoId Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+  cantidad   Int
+  precio     Decimal  @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
+
+  @@map("pedido_item")
 }
 
 model Movimiento {
   id         Int      @id @default(autoincrement())
-  tipo       String // Puede ser "entrada" o "salida"
+  tipo       String
   cantidad   Int
   productoId Int
   producto   Producto @relation(fields: [productoId], references: [id])
   createdAt  DateTime @default(now())
-}
 
-model User {
-  id                   Int      @id @default(autoincrement())
-  name                 String
-  email                String   @unique
-  passwordHash         String
-  twoFactorEnabled     Boolean  @default(false)
-  twoFactorSecret      String?
-  twoFactorTempSecret  String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  @@map("user")
+  @@map("movimiento")
 }
