@@ -9,7 +9,10 @@ async function bootstrap() {
     await prisma.$connect();
     console.log("PostgreSQL (Prisma) conectado");
 
-    app.listen(PORT, () => console.log(`🚀 API escuchando en http://localhost:${PORT}`));
+    app.listen(PORT, () => {
+        console.log(`🚀 API escuchando en http://localhost:${PORT}`);
+        console.log(`Documentación en http://localhost:${PORT}/api-docs`);
+    });
   } catch (error) {
     console.error("❌ Error al iniciar: ", error);
     process.exit(1);
