@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: backend-umg-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: backend_umg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d backend_umg"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend-network
+
+  # Servicio del Backend
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: backend-umg-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@postgres:5432/backend_umg?schema=public"
+      JWT_SECRET: "tu_jwt_secreto_super_seguro_cambialo_en_produccion"
+      PORT: 4000
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    volumes:
+      # Para desarrollo, puedes descomentar esta línea para hot reload
+      # - .:/app
+      # - /app/node_modules
+      - ./prisma:/app/prisma
+    networks:
+      - backend-network
+    command: >
+      sh -c "
+        echo 'Esperando a que PostgreSQL esté listo...' &&
+        npx prisma migrate deploy &&
+        echo 'Migraciones aplicadas exitosamente' &&
+        npm start
+      "
+
+  # Servicio opcional para administración de PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: backend-umg-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - backend-network
+    # profiles:
+    #   - tools
+
+# Volúmenes para persistencia de datos
+volumes:
+  postgres_data:
+    driver: local
+
+# Red para comunicación entre contenedores
+networks:
+  backend-network:
+    driver: bridge
