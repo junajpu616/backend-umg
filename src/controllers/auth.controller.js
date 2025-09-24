@@ -84,7 +84,7 @@ async function register(req, res) {
         role: result.user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
 
     // Preparar respuesta
@@ -149,7 +149,7 @@ async function login(req, res) {
         role: user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
 
     // Preparar respuesta
@@ -199,8 +199,20 @@ async function me(req, res) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
+    // Generar nuevo token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
     // Preparar respuesta
     const response = {
+      token,
       user: {
         id: user.id,
         name: user.name,

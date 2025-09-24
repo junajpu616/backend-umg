@@ -3,7 +3,6 @@ const qrcode = require("qrcode");
 const jwt = require("jsonwebtoken");
 const { prisma } = require("../config/prisma");
 
-// Helper to sign short-lived temporary tokens for 2FA login step
 function signTmpToken(user) {
   return jwt.sign(
     { type: "2fa", id: user.id, email: user.email },
@@ -18,7 +17,6 @@ async function setup2FA(req, res) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
-    // If already enabled, return info
     if (user.twoFactorEnabled) {
       return res.status(400).json({ error: "2FA ya está habilitado" });
     }
@@ -28,13 +26,11 @@ async function setup2FA(req, res) {
       length: 20,
     });
 
-    // Save temp secret to DB
     await prisma.user.update({
       where: { id: userId },
       data: { twoFactorTempSecret: secret.base32 },
     });
 
-    // Generate QR code data URL for the otpauth URL
     const otpauth = secret.otpauth_url;
     const qrDataUrl = await qrcode.toDataURL(otpauth);
 
@@ -103,11 +99,15 @@ async function disable2FA(req, res) {
   }
 }
 
-// Step 2 of login when 2FA is enabled
 async function verifyLogin2FA(req, res) {
   try {
-    const { tmpToken, code } = req.body;
-    if (!tmpToken || !code) return res.status(400).json({ error: "tmpToken y code son requeridos" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Bearer token requerido" });
+    }
+    const tmpToken = authHeader.split(" ")[1];
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "Código de 2fa es requerido" });
 
     let payload;
     try {
@@ -132,7 +132,7 @@ async function verifyLogin2FA(req, res) {
     const finalToken = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1d" }
     );
 
     res.json({ token: finalToken, user: { id: user.id, name: user.name, email: user.email } });
