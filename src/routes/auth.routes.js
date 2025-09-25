@@ -191,26 +191,35 @@ router.post("/change-password", authRequired, changePassword);
 // 2FA routes
 /**
  * @swagger
- * /auth/2fa/setup:
+ * /api/auth/2fa/setup:
  *   post:
- *     summary: Generar secreto para configurar 2FA
- *     tags: [Auth]
+ *     summary: Generar secreto temporal y QR para configurar 2FA
+ *     tags: [2FA]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Devuelve el secreto y el código QR para configurar 2FA
+ *         description: Secreto y QR generados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/TwoFASetupResponse"
+ *       400:
+ *         description: 2FA ya está habilitado
  *       401:
  *         description: No autenticado
+ *       500:
+ *         description: Error interno
  */
 router.post("/2fa/setup", authRequired, setup2FA);
 
 /**
  * @swagger
- * /auth/2fa/enable:
+ * /api/auth/2fa/enable:
  *   post:
- *     summary: Habilitar 2FA en la cuenta
- *     tags: [Auth]
+ *     summary: Habilitar la autenticación en dos pasos (2FA)
+ *     tags: [2FA]
+ *     description: Verifica el código TOTP generado en la app de autenticación y habilita el 2FA para el usuario.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -220,41 +229,65 @@ router.post("/2fa/setup", authRequired, setup2FA);
  *           schema:
  *             type: object
  *             required:
- *               - token
+ *               - code
  *             properties:
- *               token:
+ *               code:
  *                 type: string
  *                 example: "123456"
  *     responses:
  *       200:
  *         description: 2FA habilitado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "2FA habilitado"
  *       400:
- *         description: Token inválido
+ *         description: Código inválido o error en la verificación
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
  */
 router.post("/2fa/enable", authRequired, enable2FA);
 
 /**
  * @swagger
- * /auth/2fa/disable:
+ * /api/auth/2fa/disable:
  *   post:
  *     summary: Deshabilitar 2FA en la cuenta
- *     tags: [Auth]
+ *     tags: [2FA]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: 2FA deshabilitado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/TwoFADisableResponse"
  *       401:
  *         description: No autenticado
+ *       500:
+ *         description: Error interno
  */
 router.post("/2fa/disable", authRequired, disable2FA);
 
 /**
  * @swagger
- * /auth/2fa/verify-login:
+ * /api/auth/2fa/verify-login:
  *   post:
- *     summary: Verificar login con 2FA
- *     tags: [Auth]
+ *     summary: Verificar código 2FA en login
+ *     tags: [2FA]
+ *     description: Verifica el código TOTP junto con un token temporal (tmpToken) y devuelve un token JWT válido para acceder al sistema.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -262,20 +295,40 @@ router.post("/2fa/disable", authRequired, disable2FA);
  *           schema:
  *             type: object
  *             required:
- *               - email
- *               - token
+ *               - code
  *             properties:
- *               email:
- *                 type: string
- *                 example: usuario@correo.com
- *               token:
+ *               code:
  *                 type: string
  *                 example: "123456"
  *     responses:
  *       200:
  *         description: Login verificado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Juan Pérez"
+ *                     email:
+ *                       type: string
+ *                       example: "juan@example.com"
  *       400:
- *         description: Token inválido
+ *         description: Código inválido o tipo de token incorrecto
+ *       401:
+ *         description: Token temporal inválido o expirado
+ *       500:
+ *         description: Error interno del servidor
  */
 router.post("/2fa/verify-login", verifyLogin2FA);
 

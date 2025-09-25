@@ -59,6 +59,56 @@ const swaggerOptions = {
                             error: { type: "string", example: "Mensaje de error" }
                         }
                     },
+                    TwoFASetupResponse: {
+                        type: "object",
+                        properties: {
+                            otpauthUrl: { type: "string", example: "otpauth://totp/UMG_PROYECT:juan@example.com?secret=BASE32SECRET&issuer=UMG_PROYECT" },
+                            qr: { type: "string", format: "uri", example: "data:image/png;base64,..." },
+                            base32: { type: "string", example: "JBSWY3DPEHPK3PXP" }
+                        }
+                    },
+                    TwoFAEnableRequest: {
+                        type: "object",
+                        required: ["code"],
+                        properties: {
+                            code: { type: "string", example: "123456" }
+                        }
+                    },
+                    TwoFAEnableResponse: {
+                        type: "object",
+                        properties: {
+                            ok: { type: "boolean", example: true },
+                            message: { type: "string", example: "2FA habilitado" }
+                        }
+                    },
+                    TwoFADisableResponse: {
+                        type: "object",
+                        properties: {
+                            ok: { type: "boolean", example: true },
+                            message: { type: "string", example: "2FA deshabilitado" }
+                        }
+                    },
+                    TwoFAVerifyRequest: {
+                        type: "object",
+                        required: ["code"],
+                        properties: {
+                            code: { type: "string", example: "123456" }
+                        }
+                    },
+                    TwoFAVerifyResponse: {
+                        type: "object",
+                        properties: {
+                            token: { type: "string", example: "jwt.final.token" },
+                            user: {
+                                type: "object",
+                                properties: {
+                                    id: { type: "integer", example: 1 },
+                                    name: { type: "string", example: "Juan Pérez" },
+                                    email: { type: "string", example: "juan@example.com" }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
