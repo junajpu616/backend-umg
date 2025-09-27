@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "node prisma/seed.js",
-    "deploy": "npx prisma migrate deploy && npx prisma generate && npm start"
+    "deploy:db": "npx prisma migrate deploy && npx prisma generate",
+    "deploy": "npm run deploy:db && npm start"
   },
   "keywords": [],
   "author": "",
