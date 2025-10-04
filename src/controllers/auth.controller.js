@@ -15,7 +15,7 @@ async function register(req, res) {
       direccion,
       // Datos específicos de proveedor
       nombreComercial,
-      rfc,
+      NIT,
       latitud,
       longitud
     } = req.body;
@@ -64,7 +64,7 @@ async function register(req, res) {
           data: {
             userId: user.id,
             nombreComercial,
-            rfc,
+            nit: NIT,
             direccion,
             latitud,
             longitud,
@@ -105,7 +105,7 @@ async function register(req, res) {
       response.proveedor = {
         id: result.proveedor.id,
         nombreComercial: result.proveedor.nombreComercial,
-        rfc: result.proveedor.rfc,
+        NIT: result.proveedor.nit,
         direccion: result.proveedor.direccion,
         latitud: result.proveedor.latitud,
         longitud: result.proveedor.longitud,
@@ -170,7 +170,7 @@ async function login(req, res) {
       response.proveedor = {
         id: user.proveedor.id,
         nombreComercial: user.proveedor.nombreComercial,
-        rfc: user.proveedor.rfc,
+        NIT: user.proveedor.nit,
         direccion: user.proveedor.direccion,
         latitud: user.proveedor.latitud,
         longitud: user.proveedor.longitud,
@@ -228,7 +228,7 @@ async function me(req, res) {
       response.proveedor = {
         id: user.proveedor.id,
         nombreComercial: user.proveedor.nombreComercial,
-        rfc: user.proveedor.rfc,
+        NIT: user.proveedor.nit,
         direccion: user.proveedor.direccion,
         latitud: user.proveedor.latitud,
         longitud: user.proveedor.longitud,

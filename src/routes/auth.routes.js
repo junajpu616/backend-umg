@@ -51,9 +51,9 @@ const router = express.Router();
  *               nombreComercial:
  *                 type: string
  *                 example: "Comercial XYZ"
- *               rfc:
+ *               NIT:
  *                 type: string
- *                 example: "RFC123456789"
+ *                 example: "1234567-8"
  *               latitud:
  *                 type: number
  *                 example: 14.6349

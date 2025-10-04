@@ -64,7 +64,7 @@ async function listUsers(req, res) {
                 proveedor: {
                     id: user.proveedor.id,
                     nombreComercial: user.proveedor.nombreComercial,
-                    rfc: user.proveedor.rfc,
+                    NIT: user.proveedor.nit,
                     direccion: user.proveedor.direccion,
                     latitud: user.proveedor.latitud,
                     longitud: user.proveedor.longitud

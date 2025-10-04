@@ -189,7 +189,7 @@ async function remove(req, res) {
     });
 
     if (!proveedor || producto.proveedorId !== proveedor.id) {
-      return res.status(403).json({ error: "No tienes permiso para eliminar este producto" });
+      return res.status(403).json({ error: "No tienes permiso para inactivar este producto" });
     }
 
     // En lugar de eliminar, marcar como inactivo
