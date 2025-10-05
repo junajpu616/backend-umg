@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, me, changePassword } = require("../controllers/auth.controller");
+const { register, login, me, changePassword, updateProfile, deactivateAccount } = require("../controllers/auth.controller");
 const { setup2FA, enable2FA, disable2FA, verifyLogin2FA } = require("../controllers/twofa.controller");
 const { authRequired } = require("../middleware/auth");
 
@@ -118,6 +118,16 @@ router.post("/register", register);
  *                       example: "tmp.jwt.token"
  *       401:
  *         description: Credenciales inválidas
+ *       403:
+ *         description: Cuenta desactivada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Tu cuenta ha sido desactivada. Contacta al administrador"
  */
 router.post("/login", login);
 
@@ -145,6 +155,68 @@ router.post("/login", login);
  *         description: Token inválido o expirado
  */
 router.get("/me", authRequired, me);
+
+/**
+ * @swagger
+ * /api/auth/update-profile:
+ *   put:
+ *     summary: Actualizar datos del perfil de usuario
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Juan Carlos Pérez"
+ *               telefono:
+ *                 type: string
+ *                 example: "+50212345678"
+ *               direccion:
+ *                 type: string
+ *                 example: "Zona 10, Guatemala"
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Perfil actualizado exitosamente"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Juan Carlos Pérez"
+ *                     email:
+ *                       type: string
+ *                       example: "juan@example.com"
+ *                     telefono:
+ *                       type: string
+ *                       example: "+50212345678"
+ *                     direccion:
+ *                       type: string
+ *                       example: "Zona 10, Guatemala"
+ *       400:
+ *         description: No se proporcionó ningún campo para actualizar
+ *       401:
+ *         description: No autenticado
+ *       500:
+ *         description: Error al actualizar perfil
+ */
+router.put("/update-profile", authRequired, updateProfile);
 
 /**
  * @swagger
@@ -188,7 +260,82 @@ router.get("/me", authRequired, me);
  */
 router.post("/change-password", authRequired, changePassword);
 
+/**
+ * @swagger
+ * /api/auth/deactivate-account:
+ *   post:
+ *     summary: Desactivar la propia cuenta de usuario
+ *     description: Permite al usuario desactivar su cuenta. Requiere confirmación con contraseña. Los administradores no pueden desactivar sus propias cuentas.
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: "miPassword123"
+ *                 description: Contraseña actual para confirmar la desactivación
+ *     responses:
+ *       200:
+ *         description: Cuenta desactivada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tu cuenta ha sido desactivada exitosamente. Contacta al administrador si deseas reactivarla."
+ *       400:
+ *         description: No se proporcionó contraseña
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Se requiere la contraseña para desactivar la cuenta"
+ *       401:
+ *         description: Contraseña incorrecta o no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Contraseña incorrecta"
+ *       403:
+ *         description: Los administradores no pueden desactivar sus propias cuentas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Los administradores no pueden desactivar sus propias cuentas"
+ *       500:
+ *         description: Error al desactivar cuenta
+ */
+router.post("/deactivate-account", authRequired, deactivateAccount);
+
 // 2FA routes
+/**
+ * @swagger
+ * tags:
+ *   name: 2FA
+ *   description: Endpoints para la autenticación en dos pasos (2FA)
+ */
 /**
  * @swagger
  * /api/auth/2fa/setup:
