@@ -58,6 +58,29 @@ const router = express.Router();
 // Rutas públicas (no requieren autenticación)
 router.get("/", list);
 
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Obtener detalle de producto por ID
+ *     tags: [Productos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Detalle del producto
+ *       404:
+ *         description: Producto no encontrado
+ */
+// Detalle de producto por id
+router.get("/:id", getById);
+
 // Rutas que requieren autenticación
 router.use(authRequired);
 
@@ -210,28 +233,5 @@ router.delete("/:id", providerAuthRequired, remove);
  *         description: Producto no encontrado
  */
 router.post("/:id", providerAuthRequired, activate);
-
-/**
- * @swagger
- * /api/products/{id}:
- *   get:
- *     summary: Obtener detalle de producto por ID
- *     tags: [Productos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Detalle del producto
- *       404:
- *         description: Producto no encontrado
- */
-// Detalle de producto por id (requiere autenticación pero no rol de proveedor)
-router.get("/:id", getById);
 
 module.exports = router;
