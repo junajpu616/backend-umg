@@ -133,6 +133,8 @@ router.use(providerAuthRequired);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Proveedor'
+ *       400:
+ *        description: No se proporcionó ningún campo para actualizar
  *       401:
  *         description: No autenticado
  *       403:

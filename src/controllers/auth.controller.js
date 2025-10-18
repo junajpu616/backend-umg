@@ -248,61 +248,40 @@ async function me(req, res) {
   }
 }
 
-async function changePassword(req, res) {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: "Se requiere la contraseña actual y la nueva" });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id }
-    });
-
-    // Verificar contraseña actual
-    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!isValid) {
-      return res.status(401).json({ error: "La contraseña actual es incorrecta" });
-    }
-
-    // Hash y actualizar nueva contraseña
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash }
-    });
-
-    res.json({ message: "Contraseña actualizada exitosamente" });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al cambiar la contraseña" });
-  }
-}
-
-module.exports = { register, login, me, changePassword };
-
 async function updateProfile(req, res) {
   try {
-    const { name, telefono, direccion } = req.body;
+    const { name, telefono, direccion, currentPassword, newPassword } = req.body;
 
     // Validar que al menos un campo esté presente
-    if (!name && !telefono && !direccion) {
+    if (!name && !telefono && !direccion && !newPassword) {
       return res.status(400).json({ error: "Debes proporcionar al menos un campo para actualizar" });
     }
 
-    // Preparar datos a actualizar
     const dataToUpdate = {};
     if (name !== undefined) dataToUpdate.name = name;
     if (telefono !== undefined) dataToUpdate.telefono = telefono;
     if (direccion !== undefined) dataToUpdate.direccion = direccion;
 
-    // Actualizar usuario
+    // Si se quiere cambiar la contraseña
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Se requiere la contraseña actual para cambiarla" });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+
+      if (!isValid) {
+        return res.status(401).json({ error: "La contraseña actual es incorrecta" });
+      }
+
+      dataToUpdate.passwordHash = await bcrypt.hash(newPassword, 12);
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: dataToUpdate,
-      include: {
-        proveedor: true
-      }
+      include: { proveedor: true }
     });
 
     // Preparar respuesta
@@ -378,4 +357,4 @@ async function deactivateAccount(req, res) {
   }
 }
 
-module.exports = { register, login, me, changePassword, updateProfile, deactivateAccount };
+module.exports = { register, login, me, updateProfile, deactivateAccount };
