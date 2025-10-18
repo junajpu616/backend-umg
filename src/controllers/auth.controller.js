@@ -41,6 +41,10 @@ async function register(req, res) {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) return res.status(409).json({ error: "El email ya está registrado" });
 
+    if (password.length < 6) {
+        return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Crear usuario y proveedor en una transacción si es necesario
