@@ -147,6 +147,11 @@ async function updateMyProfile(req, res) {
   try {
     const { nombreComercial, NIT, direccion, latitud, longitud, telefono } = req.body;
 
+    // Validar que al menos un campo esté presente
+    if (nombreComercial === undefined && NIT === undefined && direccion === undefined && latitud === undefined && longitud === undefined && telefono === undefined) {
+      return res.status(400).json({ error: "Debes proporcionar al menos un campo para actualizar" });
+    }
+
     const updated = await prisma.proveedor.update({
       where: { id: req.proveedor.id },
       data: {

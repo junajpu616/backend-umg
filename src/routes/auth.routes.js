@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, me, changePassword, updateProfile, deactivateAccount } = require("../controllers/auth.controller");
+const { register, login, me, updateProfile, deactivateAccount } = require("../controllers/auth.controller");
 const { setup2FA, enable2FA, disable2FA, verifyLogin2FA } = require("../controllers/twofa.controller");
 const { authRequired } = require("../middleware/auth");
 
@@ -180,85 +180,23 @@ router.get("/me", authRequired, me);
  *               direccion:
  *                 type: string
  *                 example: "Zona 10, Guatemala"
+ *               currentPassword:
+ *                 type: string
+ *                 example: "123456"
+ *               newPassword:
+ *                 type: string
+ *                 example: "nuevoPass789"
  *     responses:
  *       200:
  *         description: Perfil actualizado correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Perfil actualizado exitosamente"
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     name:
- *                       type: string
- *                       example: "Juan Carlos Pérez"
- *                     email:
- *                       type: string
- *                       example: "juan@example.com"
- *                     telefono:
- *                       type: string
- *                       example: "+50212345678"
- *                     direccion:
- *                       type: string
- *                       example: "Zona 10, Guatemala"
  *       400:
  *         description: No se proporcionó ningún campo para actualizar
  *       401:
- *         description: No autenticado
+ *         description: No autenticado o contraseña actual incorrecta
  *       500:
  *         description: Error al actualizar perfil
  */
 router.put("/update-profile", authRequired, updateProfile);
-
-/**
- * @swagger
- * /api/auth/change-password:
- *   post:
- *     summary: Cambiar contraseña
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - currentPassword
- *               - newPassword
- *             properties:
- *               currentPassword:
- *                 type: string
- *                 example: 123456
- *               newPassword:
- *                 type: string
- *                 example: nuevoPass789
- *     responses:
- *       200:
- *         description: Contraseña cambiada correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Contraseña actualizada exitosamente"
- *       401:
- *         description: Contraseña actual incorrecta o no autenticado
- *       500:
- *         description: Error interno
- */
-router.post("/change-password", authRequired, changePassword);
 
 /**
  * @swagger
