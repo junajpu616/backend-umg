@@ -81,6 +81,11 @@ async function create(req, res) {
       return res.status(400).json({ error: "nombre, precio y categoria son requeridos" });
     }
 
+    // Validar que imagenUrl sea un array con máximo 5 elementos
+    if (imagenUrl && (!Array.isArray(imagenUrl) || imagenUrl.length > 5)) {
+      return res.status(400).json({ error: "imagenUrl debe ser un array con máximo 5 elementos" });
+    }
+
     const producto = await prisma.producto.create({
       data: {
         nombre,
@@ -151,6 +156,11 @@ async function update(req, res) {
 
     if (!proveedor || producto.proveedorId !== proveedor.id) {
       return res.status(403).json({ error: "No tienes permiso para modificar este producto" });
+    }
+
+    // Validar que imagenUrl sea un array con máximo 5 elementos
+    if (imagenUrl && (!Array.isArray(imagenUrl) || imagenUrl.length > 5)) {
+      return res.status(400).json({ error: "imagenUrl debe ser un array con máximo 5 elementos" });
     }
 
     const productoActualizado = await prisma.producto.update({
