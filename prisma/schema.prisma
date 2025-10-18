@@ -64,7 +64,7 @@ model Producto {
   proveedorId Int
   proveedor   Proveedor    @relation(fields: [proveedorId], references: [id])
   categoria   String
-  imagenUrl   String?
+  imagenUrl   String[]
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
