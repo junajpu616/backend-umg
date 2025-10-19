@@ -1,8 +1,7 @@
-const { PrismaClient } = require('../../generated/prisma');
-const prisma = new PrismaClient();
+const { prisma } = require("../config/prisma");
 
 // Create a new category
-exports.createCategory = async (req, res) => {
+async function createCategory(req, res) {
   const { name } = req.body;
   try {
     const category = await prisma.category.create({
@@ -14,20 +13,20 @@ exports.createCategory = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error creating category', error: error.message });
   }
-};
+}
 
 // Get all categories
-exports.getCategories = async (req, res) => {
+async function getCategories(req, res) {
   try {
     const categories = await prisma.category.findMany();
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching categories', error: error.message });
   }
-};
+}
 
 // Get a single category by ID
-exports.getCategoryById = async (req, res) => {
+async function getCategoryById(req, res){
   const { id } = req.params;
   try {
     const category = await prisma.category.findUnique({
@@ -40,10 +39,10 @@ exports.getCategoryById = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching category', error: error.message });
   }
-};
+}
 
 // Update a category
-exports.updateCategory = async (req, res) => {
+async function updateCategory(req, res) {
   const { id } = req.params;
   const { name } = req.body;
   try {
@@ -58,10 +57,10 @@ exports.updateCategory = async (req, res) => {
     }
     res.status(500).json({ message: 'Error updating category', error: error.message });
   }
-};
+}
 
 // Delete a category
-exports.deleteCategory = async (req, res) => {
+async function deleteCategory(req, res) {
   const { id } = req.params;
   try {
     await prisma.category.delete({
@@ -74,4 +73,6 @@ exports.deleteCategory = async (req, res) => {
     }
     res.status(500).json({ message: 'Error deleting category', error: error.message });
   }
-};
+}
+
+module.exports = { createCategory, getCategories, getCategoryById, updateCategory, deleteCategory };

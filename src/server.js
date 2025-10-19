@@ -3,7 +3,6 @@ const app = require("./app");
 const { prisma } = require("./config/prisma");
 
 const PORT = process.env.PORT || 3000;
-const API_URL = process.env.API_URL || 'http://localhost:'
 
 async function bootstrap() {
   try {
@@ -11,8 +10,8 @@ async function bootstrap() {
     console.log("PostgreSQL (Prisma) conectado");
 
     app.listen(PORT, () => {
-        console.log(`🚀 API escuchando en ${API_URL}:${PORT}`);
-        console.log(`Documentación en ${API_URL}:${PORT}/api-docs`);
+        console.log(`🚀 API escuchando en http://localhost:${PORT}`);
+        console.log(`Documentación en http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     console.error("❌ Error al iniciar: ", error);
