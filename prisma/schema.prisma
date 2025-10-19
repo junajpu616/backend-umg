@@ -43,7 +43,7 @@ model Proveedor {
   userId          Int        @unique
   user            User       @relation(fields: [userId], references: [id])
   nombreComercial String
-  rfc             String?
+  nit             String?
   direccion       String
   latitud         Float
   longitud        Float
@@ -64,7 +64,7 @@ model Producto {
   proveedorId Int
   proveedor   Proveedor    @relation(fields: [proveedorId], references: [id])
   categoria   String
-  imagenUrl   String?
+  imagenUrl   String[]
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

@@ -15,7 +15,7 @@ async function register(req, res) {
       direccion,
       // Datos específicos de proveedor
       nombreComercial,
-      rfc,
+      NIT,
       latitud,
       longitud
     } = req.body;
@@ -41,6 +41,10 @@ async function register(req, res) {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) return res.status(409).json({ error: "El email ya está registrado" });
 
+    if (password.length < 6) {
+        return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Crear usuario y proveedor en una transacción si es necesario
@@ -64,7 +68,7 @@ async function register(req, res) {
           data: {
             userId: user.id,
             nombreComercial,
-            rfc,
+            nit: NIT,
             direccion,
             latitud,
             longitud,
@@ -105,7 +109,7 @@ async function register(req, res) {
       response.proveedor = {
         id: result.proveedor.id,
         nombreComercial: result.proveedor.nombreComercial,
-        rfc: result.proveedor.rfc,
+        NIT: result.proveedor.nit,
         direccion: result.proveedor.direccion,
         latitud: result.proveedor.latitud,
         longitud: result.proveedor.longitud,
@@ -131,6 +135,11 @@ async function login(req, res) {
     });
 
     if (!user) return res.status(401).json({ error: "Credenciales inválidas" });
+
+    // Verificar si el usuario está activo
+    if (!user.active) {
+      return res.status(403).json({ error: "Tu cuenta ha sido desactivada. Contacta al administrador" });
+    }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: "Credenciales inválidas" });
@@ -170,7 +179,7 @@ async function login(req, res) {
       response.proveedor = {
         id: user.proveedor.id,
         nombreComercial: user.proveedor.nombreComercial,
-        rfc: user.proveedor.rfc,
+        NIT: user.proveedor.nit,
         direccion: user.proveedor.direccion,
         latitud: user.proveedor.latitud,
         longitud: user.proveedor.longitud,
@@ -228,7 +237,7 @@ async function me(req, res) {
       response.proveedor = {
         id: user.proveedor.id,
         nombreComercial: user.proveedor.nombreComercial,
-        rfc: user.proveedor.rfc,
+        NIT: user.proveedor.nit,
         direccion: user.proveedor.direccion,
         latitud: user.proveedor.latitud,
         longitud: user.proveedor.longitud,
@@ -243,35 +252,113 @@ async function me(req, res) {
   }
 }
 
-async function changePassword(req, res) {
+async function updateProfile(req, res) {
   try {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: "Se requiere la contraseña actual y la nueva" });
+    const { name, telefono, direccion, currentPassword, newPassword } = req.body;
+
+    // Validar que al menos un campo esté presente
+    if (!name && !telefono && !direccion && !newPassword) {
+      return res.status(400).json({ error: "Debes proporcionar al menos un campo para actualizar" });
     }
 
+    const dataToUpdate = {};
+    if (name !== undefined) dataToUpdate.name = name;
+    if (telefono !== undefined) dataToUpdate.telefono = telefono;
+    if (direccion !== undefined) dataToUpdate.direccion = direccion;
+
+    // Si se quiere cambiar la contraseña
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Se requiere la contraseña actual para cambiarla" });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+
+      if (!isValid) {
+        return res.status(401).json({ error: "La contraseña actual es incorrecta" });
+      }
+
+      dataToUpdate.passwordHash = await bcrypt.hash(newPassword, 12);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: dataToUpdate,
+      include: { proveedor: true }
+    });
+
+    // Preparar respuesta
+    const response = {
+      message: "Perfil actualizado exitosamente",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        telefono: updatedUser.telefono,
+        direccion: updatedUser.direccion
+      }
+    };
+
+    // Agregar datos de proveedor si existe
+    if (updatedUser.proveedor) {
+      response.proveedor = {
+        id: updatedUser.proveedor.id,
+        nombreComercial: updatedUser.proveedor.nombreComercial,
+        NIT: updatedUser.proveedor.nit,
+        direccion: updatedUser.proveedor.direccion,
+        latitud: updatedUser.proveedor.latitud,
+        longitud: updatedUser.proveedor.longitud,
+        telefono: updatedUser.proveedor.telefono
+      };
+    }
+
+    res.json(response);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Error al actualizar perfil" });
+  }
+}
+
+async function deactivateAccount(req, res) {
+  try {
+    const { password } = req.body;
+
+    // Validar que se proporcione la contraseña
+    if (!password) {
+      return res.status(400).json({ error: "Se requiere la contraseña para desactivar la cuenta" });
+    }
+
+    // Obtener usuario
     const user = await prisma.user.findUnique({
       where: { id: req.user.id }
     });
 
-    // Verificar contraseña actual
-    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    // Verificar contraseña
+    const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      return res.status(401).json({ error: "La contraseña actual es incorrecta" });
+      return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
-    // Hash y actualizar nueva contraseña
-    const passwordHash = await bcrypt.hash(newPassword, 12);
+    // Verificar que no sea un administrador
+    if (user.role === "ADMIN") {
+      return res.status(403).json({ error: "Los administradores no pueden desactivar sus propias cuentas" });
+    }
+
+    // Desactivar cuenta
     await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash }
+      where: { id: req.user.id },
+      data: { active: false }
     });
 
-    res.json({ message: "Contraseña actualizada exitosamente" });
+    res.json({ 
+      message: "Tu cuenta ha sido desactivada exitosamente. Contacta al administrador si deseas reactivarla." 
+    });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Error al cambiar la contraseña" });
+    res.status(500).json({ error: "Error al desactivar cuenta" });
   }
 }
 
-module.exports = { register, login, me, changePassword };
+module.exports = { register, login, me, updateProfile, deactivateAccount };

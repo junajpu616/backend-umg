@@ -3,15 +3,18 @@ const { prisma } = require("../config/prisma");
 // Listar productos por proveedor o todos los productos activos
 async function list(req, res) {
   try {
-    const { proveedorId, categoria, busqueda } = req.query;
+    const { proveedorId, categoria, busqueda, q, caracteristica } = req.query;
+    const term = busqueda || q || caracteristica;
+
     const where = {
       activo: true,
       ...(proveedorId && { proveedorId: parseInt(proveedorId) }),
       ...(categoria && { categoria }),
-      ...(busqueda && {
+      ...(term && {
         OR: [
-          { nombre: { contains: busqueda, mode: 'insensitive' } },
-          { descripcion: { contains: busqueda, mode: 'insensitive' } }
+          { nombre: { contains: term, mode: 'insensitive' } },
+          { descripcion: { contains: term, mode: 'insensitive' } },
+          { categoria: { contains: term, mode: 'insensitive' } }
         ]
       })
     };
@@ -76,6 +79,11 @@ async function create(req, res) {
     // Validar campos requeridos
     if (!nombre || !precio || !categoria) {
       return res.status(400).json({ error: "nombre, precio y categoria son requeridos" });
+    }
+
+    // Validar que imagenUrl sea un array con máximo 5 elementos
+    if (imagenUrl && (!Array.isArray(imagenUrl) || imagenUrl.length > 5)) {
+      return res.status(400).json({ error: "imagenUrl debe ser un array con máximo 5 elementos" });
     }
 
     const producto = await prisma.producto.create({
@@ -150,6 +158,11 @@ async function update(req, res) {
       return res.status(403).json({ error: "No tienes permiso para modificar este producto" });
     }
 
+    // Validar que imagenUrl sea un array con máximo 5 elementos
+    if (imagenUrl && (!Array.isArray(imagenUrl) || imagenUrl.length > 5)) {
+      return res.status(400).json({ error: "imagenUrl debe ser un array con máximo 5 elementos" });
+    }
+
     const productoActualizado = await prisma.producto.update({
       where: { id },
       data: {
@@ -169,40 +182,58 @@ async function update(req, res) {
   }
 }
 
-async function remove(req, res) {
-  try {
-    const id = Number(req.params.id);
+// Función auxiliar para manejar activación/inactivación
+async function toggleProductActivation(req, res, estado) {
+    try {
+        const id = + req.params.id;
 
-    // Verificar que el producto exista y pertenezca al proveedor
-    const producto = await prisma.producto.findUnique({
-      where: { id },
-      include: { proveedor: true }
-    });
+        // Verificar que el producto exista y pertenezca al proveedor
+        const producto = await prisma.producto.findUnique({
+            where: { id },
+            include: { proveedor: true }
+        });
 
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
+        if (!producto) {
+            return res.status(404).json({ error: "Producto no encontrado" });
+        }
+
+        // Verificar que el usuario sea el dueño del producto
+        const proveedor = await prisma.proveedor.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        if (!proveedor || producto.proveedorId !== proveedor.id) {
+            return res.status(403).json({ error: "No tienes permiso para modificar este producto" });
+        }
+
+        // Verificar el estado actual del producto
+        if (producto.activo === estado) {
+            const estadoActual = estado ? "activo" : "inactivo";
+            return res.status(406).json({ error: `Producto ya ${estadoActual}` });
+        }
+
+        // Actualizar el estado del producto
+        await prisma.producto.update({
+            where: { id },
+            data: { activo: estado }
+        });
+
+        const mensaje = estado ? "Producto activado" : "Producto inactivado";
+        return res.status(200).json({ message: mensaje });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Error al modificar el estado del producto" });
     }
+}
 
-    // Verificar que sea el propietario del producto
-    const proveedor = await prisma.proveedor.findUnique({
-      where: { userId: req.user.id }
-    });
+// Controlador para activar un producto
+async function activate(req, res) {
+    return toggleProductActivation(req, res, true);
+}
 
-    if (!proveedor || producto.proveedorId !== proveedor.id) {
-      return res.status(403).json({ error: "No tienes permiso para eliminar este producto" });
-    }
-
-    // En lugar de eliminar, marcar como inactivo
-    await prisma.producto.update({
-      where: { id },
-      data: { activo: false }
-    });
-
-    res.status(204).send();
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error al desactivar producto" });
-  }
+// Controlador para inactivar un producto
+async function remove (req, res) {
+    return toggleProductActivation(req, res, false);
 }
 
 module.exports = {
@@ -211,5 +242,6 @@ module.exports = {
   create,
   getById,
   update,
-  remove
+  remove,
+  activate,
 };

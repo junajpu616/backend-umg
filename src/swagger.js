@@ -38,7 +38,7 @@ const swaggerOptions = {
                     properties: {
                         id: {type: "integer", example: 10},
                         nombreComercial: {type: "string", example: "Comercial XYZ"},
-                        rfc: {type: "string", example: "RFC123456789"},
+                        NIT: {type: "string", example: "1234567-8"},
                         direccion: {type: "string", example: "Zona 1, Guatemala"},
                         latitud: {type: "number", example: 14.6349},
                         longitud: {type: "number", example: -90.5069},

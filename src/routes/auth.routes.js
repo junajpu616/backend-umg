@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, me, changePassword } = require("../controllers/auth.controller");
+const { register, login, me, updateProfile, deactivateAccount } = require("../controllers/auth.controller");
 const { setup2FA, enable2FA, disable2FA, verifyLogin2FA } = require("../controllers/twofa.controller");
 const { authRequired } = require("../middleware/auth");
 
@@ -51,9 +51,9 @@ const router = express.Router();
  *               nombreComercial:
  *                 type: string
  *                 example: "Comercial XYZ"
- *               rfc:
+ *               NIT:
  *                 type: string
- *                 example: "RFC123456789"
+ *                 example: "1234567-8"
  *               latitud:
  *                 type: number
  *                 example: 14.6349
@@ -118,6 +118,16 @@ router.post("/register", register);
  *                       example: "tmp.jwt.token"
  *       401:
  *         description: Credenciales inválidas
+ *       403:
+ *         description: Cuenta desactivada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Tu cuenta ha sido desactivada. Contacta al administrador"
  */
 router.post("/login", login);
 
@@ -148,9 +158,52 @@ router.get("/me", authRequired, me);
 
 /**
  * @swagger
- * /api/auth/change-password:
+ * /api/auth/update-profile:
+ *   put:
+ *     summary: Actualizar datos del perfil de usuario
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Juan Carlos Pérez"
+ *               telefono:
+ *                 type: string
+ *                 example: "+50212345678"
+ *               direccion:
+ *                 type: string
+ *                 example: "Zona 10, Guatemala"
+ *               currentPassword:
+ *                 type: string
+ *                 example: "123456"
+ *               newPassword:
+ *                 type: string
+ *                 example: "nuevoPass789"
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado correctamente
+ *       400:
+ *         description: No se proporcionó ningún campo para actualizar
+ *       401:
+ *         description: No autenticado o contraseña actual incorrecta
+ *       500:
+ *         description: Error al actualizar perfil
+ */
+router.put("/update-profile", authRequired, updateProfile);
+
+/**
+ * @swagger
+ * /api/auth/deactivate-account:
  *   post:
- *     summary: Cambiar contraseña
+ *     summary: Desactivar la propia cuenta de usuario
+ *     description: Permite al usuario desactivar su cuenta. Requiere confirmación con contraseña. Los administradores no pueden desactivar sus propias cuentas.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -161,18 +214,16 @@ router.get("/me", authRequired, me);
  *           schema:
  *             type: object
  *             required:
- *               - currentPassword
- *               - newPassword
+ *               - password
  *             properties:
- *               currentPassword:
+ *               password:
  *                 type: string
- *                 example: 123456
- *               newPassword:
- *                 type: string
- *                 example: nuevoPass789
+ *                 format: password
+ *                 example: "miPassword123"
+ *                 description: Contraseña actual para confirmar la desactivación
  *     responses:
  *       200:
- *         description: Contraseña cambiada correctamente
+ *         description: Cuenta desactivada exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -180,15 +231,49 @@ router.get("/me", authRequired, me);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Contraseña actualizada exitosamente"
+ *                   example: "Tu cuenta ha sido desactivada exitosamente. Contacta al administrador si deseas reactivarla."
+ *       400:
+ *         description: No se proporcionó contraseña
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Se requiere la contraseña para desactivar la cuenta"
  *       401:
- *         description: Contraseña actual incorrecta o no autenticado
+ *         description: Contraseña incorrecta o no autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Contraseña incorrecta"
+ *       403:
+ *         description: Los administradores no pueden desactivar sus propias cuentas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Los administradores no pueden desactivar sus propias cuentas"
  *       500:
- *         description: Error interno
+ *         description: Error al desactivar cuenta
  */
-router.post("/change-password", authRequired, changePassword);
+router.post("/deactivate-account", authRequired, deactivateAccount);
 
 // 2FA routes
+/**
+ * @swagger
+ * tags:
+ *   name: 2FA
+ *   description: Endpoints para la autenticación en dos pasos (2FA)
+ */
 /**
  * @swagger
  * /api/auth/2fa/setup:
