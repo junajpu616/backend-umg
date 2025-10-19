@@ -63,8 +63,7 @@ model Producto {
   stock       Int          @default(0)
   proveedorId Int
   proveedor   Proveedor    @relation(fields: [proveedorId], references: [id])
-  categoryId  Int
-  category    Category     @relation(fields: [categoryId], references: [id])
+  categoria   String
   imagenUrl   String[]
   activo      Boolean      @default(true)
   createdAt   DateTime     @default(now())
@@ -73,16 +72,6 @@ model Producto {
   pedidoItems PedidoItem[]
 
   @@map("producto")
-}
-
-model Category {
-  id        Int        @id @default(autoincrement())
-  nombre    String     @unique
-  productos Producto[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  @@map("category")
 }
 
 model Pedido {

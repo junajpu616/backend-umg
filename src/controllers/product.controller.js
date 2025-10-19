@@ -3,17 +3,18 @@ const { prisma } = require("../config/prisma");
 // Listar productos por proveedor o todos los productos activos
 async function list(req, res) {
   try {
-    const { proveedorId, categoryId, busqueda, q, caracteristica } = req.query;
+    const { proveedorId, categoria, busqueda, q, caracteristica } = req.query;
     const term = busqueda || q || caracteristica;
 
     const where = {
       activo: true,
       ...(proveedorId && { proveedorId: parseInt(proveedorId) }),
-      ...(categoryId && { categoryId: parseInt(categoryId) }),
+      ...(categoria && { categoria }),
       ...(term && {
         OR: [
           { nombre: { contains: term, mode: 'insensitive' } },
           { descripcion: { contains: term, mode: 'insensitive' } },
+          { categoria: { contains: term, mode: 'insensitive' } }
         ]
       })
     };
@@ -64,7 +65,7 @@ async function listMyProducts(req, res) {
 
 async function create(req, res) {
   try {
-    const { nombre, precio, stock, descripcion, categoryId, imagenUrl } = req.body;
+    const { nombre, precio, stock, descripcion, categoria, imagenUrl } = req.body;
 
     // Validar que sea un proveedor
     const proveedor = await prisma.proveedor.findUnique({
@@ -76,8 +77,8 @@ async function create(req, res) {
     }
 
     // Validar campos requeridos
-    if (!nombre || !precio || !categoryId) {
-      return res.status(400).json({ error: "nombre, precio y categoryId son requeridos" });
+    if (!nombre || !precio || !categoria) {
+      return res.status(400).json({ error: "nombre, precio y categoria son requeridos" });
     }
 
     // Validar que imagenUrl sea un array con máximo 5 elementos
@@ -91,7 +92,7 @@ async function create(req, res) {
         precio,
         stock: stock || 0,
         descripcion,
-        categoryId,
+        categoria,
         imagenUrl,
         proveedorId: proveedor.id,
         activo: true
@@ -136,7 +137,7 @@ async function getById(req, res) {
 async function update(req, res) {
   try {
     const id = Number(req.params.id);
-    const { nombre, precio, stock, descripcion, categoryId, imagenUrl, activo } = req.body;
+    const { nombre, precio, stock, descripcion, categoria, imagenUrl, activo } = req.body;
 
     // Verificar que el producto exista y pertenezca al proveedor
     const producto = await prisma.producto.findUnique({
@@ -169,7 +170,7 @@ async function update(req, res) {
         ...(precio !== undefined && { precio }),
         ...(stock !== undefined && { stock }),
         ...(descripcion !== undefined && { descripcion }),
-        ...(categoryId !== undefined && { categoryId }),
+        ...(categoria !== undefined && { categoria }),
         ...(imagenUrl !== undefined && { imagenUrl }),
         ...(activo !== undefined && { activo })
       }
