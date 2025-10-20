@@ -6,6 +6,8 @@ const adminRoutes = require("./routes/admin.routes");
 const providerRoutes = require("./routes/provider.routes");
 const categoryRoutes = require("./routes/category.routes");
 const pedidoRutas = require('./routes/pedido.routes');
+const estadoPedidoRoutes = require('./routes/estadoPedido.routes');
+const tipoMovimientoRoutes = require('./routes/tipoMovimiento.routes');
 const { swaggerUi, swaggerDocs } = require("./swagger")
 
 const app = express();
@@ -24,6 +26,8 @@ app.use("/api/providers", providerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/pedidos", pedidoRutas);
+app.use("/api/estados-pedido", estadoPedidoRoutes);
+app.use("/api/tipos-movimiento", tipoMovimientoRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 

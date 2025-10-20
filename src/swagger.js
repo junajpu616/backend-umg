@@ -108,6 +108,30 @@ const swaggerOptions = {
                             }
                         }
                     }
+                },
+                ItemPedido: {
+                    type: "object",
+                    properties: {
+                        id: { type: "integer", example: 1 },
+                        productoId: { type: "integer", example: 101 },
+                        cantidad: { type: "integer", example: 2 },
+                        precio: { type: "number", format: "float", example: 25.50 }
+                    }
+                },
+                Pedido: {
+                    type: "object",
+                    properties: {
+                        id: { type: "integer", example: 123 },
+                        clienteId: { type: "integer", example: 1 },
+                        proveedorId: { type: "integer", example: 10 },
+                        estadoId: { type: "integer", example: 1 },
+                        fecha: { type: "string", format: "date-time", example: "2024-01-01T12:00:00Z" },
+                        total: { type: "number", format: "float", example: 51.00 },
+                        items: {
+                            type: "array",
+                            items: { $ref: "#/components/schemas/ItemPedido" }
+                        }
+                    }
                 }
             }
         },

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { createPedido, updatePedidoEstado } = require('../controllers/pedido.controller');
 const { authRequired } = require('../middleware/auth');
-const { adminAuthRequired } = require('../middleware/adminAuth');
 
 /**
  * @swagger
@@ -11,57 +10,12 @@ const { adminAuthRequired } = require('../middleware/adminAuth');
  *   description: Manegador de pedidos en el sistema
  */
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Pedido:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *         userId:
- *           type: integer
- *         estadoId:
- *           type: integer
- *         total:
- *           type: number
- *           format: double
- *         comision:
- *           type: number
- *           format: double
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *         items:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/PedidoItem'
- *     PedidoItem:
- *        type: object
- *        properties:
- *          id:
- *            type: integer
- *          productoId:
- *            type: integer
- *          cantidad:
- *            type: integer
- *          precio:
- *            type: number
- *            format: double
- *          subtotal:
- *            type: number
- *            format: double
- */
 
 /**
  * @swagger
  * /api/pedidos:
  *   post:
- *     summary: Create a new order
+ *     summary: Create una nueva orden
  *     tags: [Pedidos]
  *     security:
  *       - bearerAuth: []
@@ -105,7 +59,7 @@ router.post('/', authRequired, createPedido);
  * @swagger
  * /api/pedidos/{id}/estado:
  *   put:
- *     summary: Update the status of an order (Admin only)
+ *     summary: Actualizar el estado de un pedido (Admin o Proveedor)
  *     tags: [Pedidos]
  *     security:
  *       - bearerAuth: []
@@ -125,25 +79,19 @@ router.post('/', authRequired, createPedido);
  *             properties:
  *               estadoId:
  *                 type: integer
- *                 description: The ID of the new status (e.g., 2 for CONFIRMADO, 3 for ENTREGADO)
+ *                 description: El ID de un nuevo estado
  *             example:
  *               estadoId: 2
  *     responses:
  *       200:
  *         description: Order status updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Pedido'
- *       400:
- *         description: Bad request (e.g., invalid status ID, order not found)
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden (not an admin)
+ *         description: Forbidden (user is not the owner provider or not an admin)
  *       404:
  *         description: Order not found
  */
-router.put('/:id/estado', authRequired, adminAuthRequired, updatePedidoEstado);
+router.put('/:id/estado', authRequired, updatePedidoEstado);
 
 module.exports = router;

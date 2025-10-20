@@ -19,23 +19,23 @@ const { authRequired } = require('../middleware/auth');
  *       properties:
  *         id:
  *           type: integer
- *           description: The auto-generated id of the category
+ *           description: El ID de la categoría
  *         nombre:
  *           type: string
- *           description: The name of the category
+ *           description: El nombre de la categoría
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: The date the category was created
+ *           description: Cuando se creo la categoría
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: The date the category was last updated
+ *           description: Cuando se actualizó la categoría
  *       required:
  *         - nombre
  *       example:
  *         id: 1
- *         nombre: "Electronics"
+ *         nombre: "Motores"
  *         createdAt: "2023-10-27T10:00:00.000Z"
  *         updatedAt: "2023-10-27T10:00:00.000Z"
  *   securitySchemes:
@@ -49,18 +49,18 @@ const { authRequired } = require('../middleware/auth');
  * @swagger
  * tags:
  *   name: Categories
- *   description: API for managing product categories
+ *   description: API para controlar las categorías de productos
  */
 
 /**
  * @swagger
  * /api/categories:
  *   get:
- *     summary: Retrieve a list of all categories
+ *     summary: Lista todas las categorías
  *     tags: [Categories]
  *     responses:
  *       200:
- *         description: A list of categories.
+ *         description: Lista de categorías
  *         content:
  *           application/json:
  *             schema:
@@ -76,7 +76,7 @@ router.get('/', getCategories);
  * @swagger
  * /api/categories/{id}:
  *   get:
- *     summary: Get a single category by ID
+ *     summary: Obtener una categoría por su ID
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -86,10 +86,10 @@ router.get('/', getCategories);
  *         schema:
  *           type: integer
  *         required: true
- *         description: The category ID
+ *         description: ID de la categoría
  *     responses:
  *       200:
- *         description: The category description by id
+ *         description: Descripción de la categoría
  *         content:
  *           application/json:
  *             schema:
@@ -109,7 +109,7 @@ router.get('/:id', authRequired, adminAuthRequired, getCategoryById);
  * @swagger
  * /api/categories:
  *   post:
- *     summary: Create a new category
+ *     summary: Crear una nueva categoría
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -125,7 +125,7 @@ router.get('/:id', authRequired, adminAuthRequired, getCategoryById);
  *             required:
  *               - name
  *             example:
- *               name: "Laptops"
+ *               name: "Llantas"
  *     responses:
  *       201:
  *         description: The category was successfully created
@@ -148,7 +148,7 @@ router.post('/', authRequired, adminAuthRequired, createCategory);
  * @swagger
  * /api/categories/{id}:
  *   put:
- *     summary: Update a category by ID
+ *     summary: Actualizar una categoría por su ID
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -169,7 +169,7 @@ router.post('/', authRequired, adminAuthRequired, createCategory);
  *               nombre:
  *                 type: string
  *             example:
- *               nombre: "Gaming Laptops"
+ *               nombre: "Motor Nuevo"
  *     responses:
  *       200:
  *         description: The category was updated
@@ -194,7 +194,7 @@ router.put('/:id', authRequired, adminAuthRequired, updateCategory);
  * @swagger
  * /api/categories/{id}:
  *   delete:
- *     summary: Delete a category by ID
+ *     summary: Eliminar una categoría por su ID
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -204,7 +204,7 @@ router.put('/:id', authRequired, adminAuthRequired, updateCategory);
  *         schema:
  *           type: integer
  *         required: true
- *         description: The category ID
+ *         description: El ID de la categoría
  *     responses:
  *       204:
  *         description: The category was deleted successfully
