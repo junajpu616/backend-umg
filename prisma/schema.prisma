@@ -85,16 +85,26 @@ model Category {
   @@map("category")
 }
 
+model EstadoPedido {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique // PENDIENTE, CONFIRMADO, EN_PROCESO, ENTREGADO, CANCELADO
+  descripcion String?
+  pedidos     Pedido[]
+
+  @@map("estado_pedido")
+}
+
 model Pedido {
-  id        Int          @id @default(autoincrement())
-  userId    Int
-  user      User         @relation(fields: [userId], references: [id])
-  estado    String // PENDIENTE, CONFIRMADO, EN_PROCESO, ENTREGADO, CANCELADO
-  items     PedidoItem[]
-  total     Decimal      @db.Decimal(10, 2)
-  comision  Decimal      @db.Decimal(10, 2)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  estadoId       Int
+  estado         EstadoPedido @relation(fields: [estadoId], references: [id])
+  items          PedidoItem[]
+  total          Decimal      @db.Decimal(10, 2)
+  comision       Decimal      @db.Decimal(10, 2)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@map("pedido")
 }
@@ -112,13 +122,23 @@ model PedidoItem {
   @@map("pedido_item")
 }
 
+model TipoMovimiento {
+  id          Int          @id @default(autoincrement())
+  nombre      String       @unique // VENTA, COMPRA, AJUSTE, DEVOLUCION, PERDIDA
+  descripcion String?
+  movimientos Movimiento[]
+
+  @@map("tipo_movimiento")
+}
+
 model Movimiento {
-  id         Int      @id @default(autoincrement())
-  tipo       String
-  cantidad   Int
-  productoId Int
-  producto   Producto @relation(fields: [productoId], references: [id])
-  createdAt  DateTime @default(now())
+  id               Int            @id @default(autoincrement())
+  tipoId           Int
+  tipo             TipoMovimiento @relation(fields: [tipoId], references: [id])
+  cantidad         Int
+  productoId       Int
+  producto         Producto       @relation(fields: [productoId], references: [id])
+  createdAt        DateTime       @default(now())
 
   @@map("movimiento")
 }

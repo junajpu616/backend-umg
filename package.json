@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "seed": "node prisma/seed.js",
+    "seed:catalogos": "node prisma/seedCatalogos.js",
     "deploy:db": "npx prisma migrate deploy && npx prisma generate",
     "deploy": "npm run deploy:db && npm start"
   },
